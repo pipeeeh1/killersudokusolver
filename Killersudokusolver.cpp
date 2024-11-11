@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>  
 #include <string>
 #include <vector>
 #include <map>
@@ -7,16 +8,17 @@ using namespace std;
 
 struct Celda {
     int valor;
-    int grupo=0;
+    int grupo;
     //indica si el valor se puede mover o es valor fijo dado por el puzzle.
-    bool numeroFijo=0; 
+    bool numeroFijo; 
 };
 
 //alias Matrix=un vector de 9 vectores, donde cada sub vector contiene un struct tipo Celda.
 using Matrix = vector<vector<Celda>>;
 
 Matrix inicializarSudoku(string& Nombre){
-    ifstream archivo(Nombre);
+
+    ifstream archivo("instances/"+Nombre);
 
     if (!archivo) {
         std::cerr << "No se puede abrir archivo" << std::endl;
@@ -24,7 +26,27 @@ Matrix inicializarSudoku(string& Nombre){
         return {};
     }
 
-    Matrix Sudoku;
+    Matrix Sudoku(9, std::vector<Celda>(9));
+    string linea;
+
+    int y = 0;
+     while (getline(archivo, linea) && y < 9) {
+        istringstream stream(linea);
+        string celdastring;
+        int x= 0;
+        
+        while (stream >> celdastring && x < 9) {
+            if (celdastring[0] == '.') {
+                Sudoku[y][x] = {0, stoi(celdastring.substr(2),0)}; 
+            } else {
+                int valor = stoi(celdastring.substr(0, 1)); 
+                int grupo = stoi(celdastring.substr(2));  
+                Sudoku[y][x] = {valor,grupo,1};
+            }
+            x++;
+        }
+        y++;
+    }
 
 
 
@@ -51,17 +73,9 @@ void printMatrix(Matrix& sudoku){
 }
 
 int main() {
-    //string instancia ="10blank.txt";
+    string instancia ="10blank.txt";
 
-    //Matrix Sudoku=inicializarSudoku(instancia);
+    Matrix Sudoku=inicializarSudoku(instancia);
 
-    Matrix sudokutest(9, std::vector<Celda>(9));
-    
-    for (int y=0; y<9; y++){
-        for(int x=0; x<9 ;x++){
-            sudokutest[y][x].valor=x;   
-        }
-    }
-    
-    printMatrix(sudokutest);
+    printMatrix(Sudoku);
 }
