@@ -16,15 +16,17 @@ struct Celda {
 //alias Matrix=un vector de 9 vectores, donde cada sub vector contiene un struct tipo Celda.
 using Matrix = vector<vector<Celda>>;
 
-Matrix inicializarSudoku(string& Nombre){
-
-    ifstream archivo("instances/"+Nombre);
-
+ifstream abrirArchivo(const string& nombre) {
+    std::ifstream archivo("instances/"+nombre);
     if (!archivo) {
-        std::cerr << "No se puede abrir archivo" << std::endl;
-        //matriz vacia
-        return {};
+        std::cerr << "Error al abrir el archivo" << std::endl;
+        exit(1);  
     }
+    return archivo;
+}
+
+
+Matrix inicializarSudoku(ifstream& archivo){
 
     Matrix Sudoku(9, std::vector<Celda>(9));
     string linea;
@@ -74,8 +76,8 @@ void printMatrix(Matrix& sudoku){
 
 int main() {
     string instancia ="10blank.txt";
-
-    Matrix Sudoku=inicializarSudoku(instancia);
+    ifstream archivo=abrirArchivo(instancia);
+    Matrix Sudoku=inicializarSudoku(archivo);
 
     printMatrix(Sudoku);
 }
