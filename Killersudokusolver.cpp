@@ -3,6 +3,7 @@
 #include <sstream>  
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <map>
 using namespace std;
 
@@ -13,8 +14,15 @@ struct Celda {
     bool numeroFijo; 
 };
 
+struct Coords{
+    int x;
+    int y;
+};
+
 //alias Matrix=un vector de 9 vectores, donde cada sub vector contiene un struct tipo Celda.
 using Matrix = vector<vector<Celda>>;
+using numeroGrupoaSuma = map<int, int>;
+using numeroGrupoaCeldas= unordered_map<int, vector<Coords>>;
 
 ifstream abrirArchivo(const string& nombre) {
     std::ifstream archivo("instances/"+nombre);
@@ -26,36 +34,44 @@ ifstream abrirArchivo(const string& nombre) {
 }
 
 
-Matrix inicializarSudoku(ifstream& archivo){
+tuple<Matrix,numeroGrupoaCeldas,numeroGrupoaSuma> inicializarSudoku(ifstream& archivo){
 
     Matrix Sudoku(9, std::vector<Celda>(9));
+    numeroGrupoaCeldas GrupoCeldasMap;
+    numeroGrupoaSuma GrupoSumaMap;
     string linea;
 
     int y = 0;
-     while (getline(archivo, linea) && y < 9) {
+    while (getline(archivo, linea) && y < 9) {
         istringstream stream(linea);
         string celdastring;
         int x= 0;
         
         while (stream >> celdastring && x < 9) {
+                int grupo = stoi(celdastring.substr(2));
             if (celdastring[0] == '.') {
-                Sudoku[y][x] = {0, stoi(celdastring.substr(2),0)}; 
+                Sudoku[y][x] = {0,grupo,0}; 
             } else {
-                int valor = stoi(celdastring.substr(0, 1)); 
-                int grupo = stoi(celdastring.substr(2));  
+                int valor = stoi(celdastring.substr(0, 1));   
                 Sudoku[y][x] = {valor,grupo,1};
             }
+            GrupoCeldasMap[grupo].push_back({x,y});
             x++;
         }
         y++;
     }
 
+    while (getline(archivo, linea)) {
+        istringstream stream(linea);
+        string grupo, suma;
+        if (getline(stream, grupo, ':') && getline(stream, suma)) {
+            int grupoint= stoi(grupo.substr(1));
+            int sumaint= stoi(suma);
+            GrupoSumaMap[grupoint]=sumaint;
+        }
+    }
 
-
-
-
-
-    return Sudoku;
+    return make_tuple(Sudoku,GrupoCeldasMap,GrupoSumaMap);
 }
 
 void printMatrix(Matrix& sudoku){
@@ -74,10 +90,19 @@ void printMatrix(Matrix& sudoku){
     }
 }
 
+void printGrupoaSuma(numeroGrupoaSuma dictionary){
+    for (const auto& par : dictionary) {
+        cout << "Grupo " << par.first << ": " << par.second <<endl;
+    }
+}
+
 int main() {
     string instancia ="10blank.txt";
     ifstream archivo=abrirArchivo(instancia);
-    Matrix Sudoku=inicializarSudoku(archivo);
+
+    auto [Sudoku, GrupoACeldas, GrupoASuma]=inicializarSudoku(archivo);
 
     printMatrix(Sudoku);
+    printGrupoaSuma(GrupoASuma);
+    
 }
