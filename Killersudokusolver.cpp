@@ -3,7 +3,6 @@
 #include <sstream>  
 #include <string>
 #include <vector>
-#include <unordered_map>
 #include <map>
 using namespace std;
 
@@ -22,7 +21,7 @@ struct Coords{
 //alias Matrix=un vector de 9 vectores, donde cada sub vector contiene un struct tipo Celda.
 using Matrix = vector<vector<Celda>>;
 using numeroGrupoaSuma = map<int, int>;
-using numeroGrupoaCeldas= unordered_map<int, vector<Coords>>;
+using numeroGrupoaCeldas= map<int, vector<Coords>>;
 
 ifstream abrirArchivo(const string& nombre) {
     std::ifstream archivo("instances/"+nombre);
@@ -96,6 +95,17 @@ void printGrupoaSuma(numeroGrupoaSuma dictionary){
     }
 }
 
+void printGrupoaCeldas(numeroGrupoaCeldas dictionary){
+    for (const auto& group : dictionary) {
+        cout << "Grupo " << group.first << ": ";
+        for (Coords cell : group.second) {
+            cout << "(" << cell.x << "," << cell.y << ")";
+        }
+        cout << endl;
+        
+    }
+}
+
 int main() {
     string instancia ="10blank.txt";
     ifstream archivo=abrirArchivo(instancia);
@@ -104,5 +114,6 @@ int main() {
 
     printMatrix(Sudoku);
     printGrupoaSuma(GrupoASuma);
+    printGrupoaCeldas(GrupoACeldas);
     
 }
