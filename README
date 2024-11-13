@@ -1,5 +1,7 @@
 Utilizar comando make para compilar
 
 Utilizar make run para ejecutar codigo, una vez ejecutado se preguntará por el numero de instancia.
+El codigó generará una solucion inicial utilizando un algoritmo Greedy y luego la imprimirá por consola
+También se imprimirá la evaluación de esa solución.
 
 Utilizar make clean eliminar compilados.

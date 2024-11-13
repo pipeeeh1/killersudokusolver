@@ -259,9 +259,8 @@ int main() {
     //Solucion inicial utilizando Greedy
     GreedyFill(Sudoku);
     //Evaluacion Solución inicial
-    int repetidos=EvaluarGrupos(Sudoku,GrupoACeldas,GrupoASuma);
+    int repetidos=EvaluarSudoku(Sudoku,GrupoACeldas,GrupoASuma);
     cout<< repetidos << endl;
     printMatrix(Sudoku);
-    
     
 }
