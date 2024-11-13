@@ -1,0 +1,5 @@
+Utilizar comando make para compilar
+
+Utilizar make run para ejecutar codigo, una vez ejecutado se preguntará por el numero de instancia.
+
+Utilizar make clean eliminar compilados.
