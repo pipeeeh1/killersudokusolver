@@ -24,7 +24,7 @@ using Matrix = vector<vector<Celda>>;
 using numeroGrupoaSuma = map<int, int>;
 using numeroGrupoaCeldas= map<int, vector<Coords>>;
 
-ifstream abrirArchivo(const string& nombre){
+ifstream abrirArchivo(const string nombre){
     ifstream archivo("instances/"+nombre);
     if (!archivo){
         cerr << "Error al abrir el archivo" << endl;
@@ -33,8 +33,7 @@ ifstream abrirArchivo(const string& nombre){
     return archivo;
 }
 
-
-tuple<Matrix,numeroGrupoaCeldas,numeroGrupoaSuma> inicializarSudoku(ifstream& archivo){
+tuple<Matrix,numeroGrupoaCeldas,numeroGrupoaSuma>inicializarSudoku(ifstream& archivo){
 
     Matrix Sudoku(9, vector<Celda>(9));
     numeroGrupoaCeldas GrupoCeldasMap;
@@ -70,7 +69,7 @@ tuple<Matrix,numeroGrupoaCeldas,numeroGrupoaSuma> inicializarSudoku(ifstream& ar
             GrupoSumaMap[grupoint]=sumaint;
         }
     }
-
+    archivo.close();
     return make_tuple(Sudoku,GrupoCeldasMap,GrupoSumaMap);
 }
 
@@ -98,7 +97,6 @@ void Rellenar3x3(Matrix& Sudoku, int inicioFila, int inicioColumna){
     }
 
     //rellenar 3x3 con los numeros posibles
-
     for (size_t j= 0; j < CeldasVacias.size(); ++j){
         int x = CeldasVacias[j].x;
         int y = CeldasVacias[j].y;
@@ -112,7 +110,60 @@ void GreedyFill(Matrix& Sudoku){
         for (int inicioColumna = 0; inicioColumna < 9; inicioColumna += 3){
             Rellenar3x3(Sudoku, inicioFila, inicioColumna);
         }
+    }
 }
+
+int EvaluarColumna(Matrix Sudoku, int NumeroColumna){
+    vector<bool> existe(9, false);
+    int counter=0;
+    for(int y=0; y<9; y++){
+        int numero= Sudoku[y][NumeroColumna].valor;
+        int indice= numero-1;
+
+        if(existe[indice]== true){
+            counter++;
+        }else{
+            existe[indice]=true;
+        }
+    }
+    return counter;
+};
+
+int EvaluarFila(Matrix Sudoku, int NumeroFila){
+    vector<bool> existe(9, false);
+    int counter=0;
+    for(int x=0; x<9; x++){
+        int numero= Sudoku[NumeroFila][x].valor;
+        int indice= numero-1;
+
+        if(existe[indice]== true){
+            counter++;
+        }else{
+            existe[indice]=true;
+        }
+    }
+    return counter;
+}
+
+int EvaluarGrupos(Matrix Sudoku,numeroGrupoaCeldas GrupoaCeldas,numeroGrupoaSuma GrupoaSuma){
+    int CantidadGrupos= GrupoaSuma.size();
+    for (int=0; i<CantidadGrupos; i++){
+
+    }
+}
+ 
+int EvaluarSudoku(Matrix Sudoku){
+    int sum=0;
+    for(int y=0; y<9; y++){
+        sum += EvaluarFila(Sudoku,y);
+    }
+
+    for(int x=0; x<9; x++){
+        sum += EvaluarColumna(Sudoku,x);
+    }
+    return sum;
+
+
 }
 
 void printMatrix(Matrix& sudoku){
@@ -149,15 +200,26 @@ void printGrupoaCeldas(numeroGrupoaCeldas dictionary){
 }
 
 int main() {
-    string instancia ="20blank.txt";
+
+    cout<<"Elija la cantidad de casillas vacías(10,20,30,40,50,60,80)";
+    string casillas;
+    cin >> casillas;
+    string instancia = casillas + "blank.txt";
     ifstream archivo=abrirArchivo(instancia);
 
-    auto [Sudoku, GrupoACeldas, GrupoASuma]=inicializarSudoku(archivo);
 
+    auto [Sudoku, GrupoACeldas, GrupoASuma]=inicializarSudoku(archivo);
     printMatrix(Sudoku);
     cout << endl;
     GreedyFill(Sudoku);
+
+    int repetidos;
+    repetidos=EvaluarSudoku(Sudoku);
+
+    cout<< repetidos << endl;
     printMatrix(Sudoku);
+    
+
     //printGrupoaSuma(GrupoASuma);
     //printGrupoaCeldas(GrupoACeldas);
     
