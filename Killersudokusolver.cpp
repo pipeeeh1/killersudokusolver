@@ -5,6 +5,8 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <random>
+#include <cmath>
 using namespace std;
 
 struct Celda{
@@ -91,7 +93,9 @@ tuple<Matrix,numeroGrupoaCeldas,numeroGrupoaSuma>inicializarSudoku(ifstream& arc
 
 //Funcion parte de la solución inicial greedy, la función miope solo se encarga de rellenar correctamente 
 //las secciones 3x3 sin repetir valores, no revisa filas ni columnas.
-void Rellenar3x3(Matrix& Sudoku, int inicioFila, int inicioColumna){
+//tambien retorna vector con las coordenadas vacias del 3x3
+//util para despues determinar que swaps son validos
+vector<Coords> Rellenar3x3(Matrix& Sudoku, int inicioFila, int inicioColumna){
     set<int> NumerosExistentes;
     vector<Coords> CeldasVacias;
 
@@ -120,16 +124,23 @@ void Rellenar3x3(Matrix& Sudoku, int inicioFila, int inicioColumna){
         int y = CeldasVacias[j].y;
         Sudoku[y][x].valor = NumerosPosibles[j];
     }
+    return CeldasVacias;
 }
 
 
-void GreedyFill(Matrix& Sudoku){
+vector<vector<Coords>> GreedyFill(Matrix& Sudoku){
     //se llama a la funcion rellenar 3x3 a los 9 sub grupos
+    //retorna un vector de vectores que contienen las coordenadas de celdas swapeables
+    //cada indice corresponde a un 3x3.
+    vector<vector<Coords>> CeldasSwap3x3(9);
+    int i=0;
     for (int inicioFila = 0; inicioFila < 9; inicioFila += 3){
         for (int inicioColumna = 0; inicioColumna < 9; inicioColumna += 3){
-            Rellenar3x3(Sudoku, inicioFila, inicioColumna);
+            CeldasSwap3x3[i]=Rellenar3x3(Sudoku, inicioFila, inicioColumna);
+            i++;
         }
     }
+    return CeldasSwap3x3;
 }
 
 //Se genera un vector de booleanos que indica si el valor se ha visto antes.
@@ -225,6 +236,7 @@ void printMatrix(Matrix& sudoku){
         }
         cout << endl;
     }
+    cout<< endl;
 }
 //Funcion que printea los valores guardados en el diccionario numeroGrupoaSuma.
 void printGrupoaSuma(numeroGrupoaSuma dictionary){
@@ -245,6 +257,97 @@ void printGrupoaCeldas(numeroGrupoaCeldas dictionary){
     }
 }
 
+//testing
+void PrintVectorOfVectors(const vector<vector<Coords>>& vec) {
+    for (size_t i = 0; i < vec.size(); ++i) {
+        cout << "Grupo " << i + 1 << ":\n";
+        for (const auto& coord : vec[i]) {
+            cout << "(" << coord.x << ", " << coord.y << ") ";
+        }
+        cout << "\n";
+    }
+}
+
+Matrix SwapCells(Matrix Sudoku,Coords celda1, Coords celda2){
+    int x1=celda1.x;
+    int y1=celda1.y;
+
+    int x2=celda2.x;
+    int y2=celda2.y;
+
+    int aux= Sudoku[y1][x1].valor;
+
+    Sudoku[y1][x1].valor=Sudoku[y2][x2].valor;
+    Sudoku[y2][x2].valor=aux;
+
+    return Sudoku;
+}
+
+void IteracionSA(Matrix& SudokuActual,Matrix& Sudokubest,int& EvaluacionActual,int& BestEval,float& temp ,float Rateofcooling,mt19937& gen,numeroGrupoaCeldas GrupoaCeldas , numeroGrupoaSuma GrupoaSuma, vector<vector<Coords>> CeldasSwap3x3){
+    uniform_int_distribution<> Rand3x3(0, 9);
+    uniform_int_distribution<> CeldaAleatoria(0, 0);
+    int CantidadCeldasSwapeables=0;
+    int Cuadrante=0;
+
+    //elegir un cuadrante hasta que el cuadrante tenga más de dos valores swapeables
+    //si tiene un solo valor entonces el cuadrante esta correcto y no hay que swapear.
+    while (CantidadCeldasSwapeables<2){
+        Cuadrante=Rand3x3(gen);
+        CantidadCeldasSwapeables = CeldasSwap3x3[Cuadrante].size();
+    }
+    cout<< "cuadrante a swapear:"<< Cuadrante << endl;
+
+    //eleccion de celdas
+    CeldaAleatoria.param(uniform_int_distribution<>::param_type(0,CantidadCeldasSwapeables-1));
+    int pos1=CeldaAleatoria(gen);
+    int pos2=CeldaAleatoria(gen);
+    while (pos1==pos2){
+        pos2= CeldaAleatoria(gen);
+    }
+
+    Coords celda1= CeldasSwap3x3[Cuadrante][pos1];
+    Coords celda2= CeldasSwap3x3[Cuadrante][pos2];
+
+    //Se hace el swap aleatorio
+    Matrix SudokuSwapd = SwapCells(SudokuActual,celda1,celda2);
+
+
+    //printMatrix(SudokuSwapd);
+
+    //evaluación del swap
+    int EvalSwapd = EvaluarSudoku(SudokuSwapd,GrupoaCeldas,GrupoaSuma);
+
+    int dif = EvalSwapd-EvaluacionActual;  //minimizar el valor, por lo que si la dif es negativa, el resultado se acepta instantaneamente.  
+    if (dif<0){
+        //aceptar
+        cout<<"aceptado" << endl;
+        SudokuActual=SudokuSwapd;
+        EvaluacionActual=EvalSwapd;
+        if(EvaluacionActual>BestEval){
+            BestEval=EvaluacionActual;
+            Sudokubest=SudokuActual;
+        }
+    }else{
+        float chance = exp(-dif/temp);
+        uniform_real_distribution rand(0.0,1.0);
+        float randvalue = rand(gen);
+        cout<<"chance: "<< chance << "rand:" << randvalue<< endl;
+        if(randvalue<chance){
+            SudokuActual=SudokuSwapd;
+            EvaluacionActual=EvalSwapd;
+            cout<<"aceptado" << endl;
+        }else{
+            cout<<"rechazado" << endl;
+        }
+    }
+    cout<< "swap:(" << celda1.x << ", " << celda1.y << ")" << "(" << celda2.x << ", " << celda2.y << ")" << endl;
+    cout<< "dif:"<< dif<< endl;
+    cout<<"evalswap:"<<EvalSwapd<<endl;
+    cout<<"evalact:"<<EvaluacionActual<<endl;
+    temp=temp*Rateofcooling;
+}
+
+
 
 int main() {
     //Se pregunta cual instancia abrir
@@ -253,14 +356,36 @@ int main() {
     cin >> casillas;
     string instancia = casillas + "blank.txt";
     ifstream archivo=abrirArchivo(instancia);
+
+
     //Inicializacion de estructuras de datos utilizadas
     auto [Sudoku, GrupoACeldas, GrupoASuma]=inicializarSudoku(archivo);
-
-    //Solucion inicial utilizando Greedy
-    GreedyFill(Sudoku);
-    //Evaluacion Solución inicial
-    int repetidos=EvaluarSudoku(Sudoku,GrupoACeldas,GrupoASuma);
-    cout<< repetidos << endl;
     printMatrix(Sudoku);
+    //Solucion inicial utilizando Greedy
+    vector<vector<Coords>> CeldasSwap3x3=GreedyFill(Sudoku);
+
+    //Evaluacion Solución inicial
+    int Evalinicial=EvaluarSudoku(Sudoku,GrupoACeldas,GrupoASuma);
+    cout<< Evalinicial << endl;
+    printMatrix(Sudoku);
+
+
+    //seteo de variables
+    int Semilla=110;
+    float Temp=1;
+    float Rateofcooling=0.99;
+    int maxIterations=100;
+
+    //seteo de best sudoku
+    Matrix Bestsudoku=Sudoku;
+    int Besteval=Evalinicial;
+
+    mt19937 gen(Semilla);
+    int i=0;
+    while ((i<maxIterations)&&(Evalinicial!=0)){
+        IteracionSA(Sudoku,Bestsudoku,Evalinicial,Besteval,Temp,Rateofcooling,gen,GrupoACeldas,GrupoASuma,CeldasSwap3x3);    
+        i++;
+    }
     
+    printMatrix(Bestsudoku);
 }
