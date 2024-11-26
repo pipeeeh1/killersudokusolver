@@ -295,7 +295,8 @@ void IteracionSA(Matrix& SudokuActual,Matrix& Sudokubest,int& EvaluacionActual,i
         Cuadrante=Rand3x3(gen);
         CantidadCeldasSwapeables = CeldasSwap3x3[Cuadrante].size();
     }
-    cout<< "cuadrante a swapear:"<< Cuadrante << endl;
+
+    //cout<< "cuadrante a swapear:"<< Cuadrante << endl;
 
     //eleccion de celdas
     CeldaAleatoria.param(uniform_int_distribution<>::param_type(0,CantidadCeldasSwapeables-1));
@@ -320,10 +321,10 @@ void IteracionSA(Matrix& SudokuActual,Matrix& Sudokubest,int& EvaluacionActual,i
     int dif = EvalSwapd-EvaluacionActual;  //minimizar el valor, por lo que si la dif es negativa, el resultado se acepta instantaneamente.  
     if (dif<0){
         //aceptar
-        cout<<"aceptado" << endl;
+        //cout<<"aceptado" << endl;
         SudokuActual=SudokuSwapd;
         EvaluacionActual=EvalSwapd;
-        if(EvaluacionActual>BestEval){
+        if(EvaluacionActual<BestEval){
             BestEval=EvaluacionActual;
             Sudokubest=SudokuActual;
         }
@@ -331,20 +332,21 @@ void IteracionSA(Matrix& SudokuActual,Matrix& Sudokubest,int& EvaluacionActual,i
         float chance = exp(-dif/temp);
         uniform_real_distribution rand(0.0,1.0);
         float randvalue = rand(gen);
-        cout<<"chance: "<< chance << "rand:" << randvalue<< endl;
+        //cout<<"chance: "<< chance << endl <<"rand:" << randvalue<< endl;
         if(randvalue<chance){
             SudokuActual=SudokuSwapd;
             EvaluacionActual=EvalSwapd;
-            cout<<"aceptado" << endl;
+            //cout<<"aceptado" << endl;
         }else{
-            cout<<"rechazado" << endl;
+            //cout<<"rechazado" << endl;
         }
     }
-    cout<< "swap:(" << celda1.x << ", " << celda1.y << ")" << "(" << celda2.x << ", " << celda2.y << ")" << endl;
-    cout<< "dif:"<< dif<< endl;
-    cout<<"evalswap:"<<EvalSwapd<<endl;
-    cout<<"evalact:"<<EvaluacionActual<<endl;
+    //cout<< "swap:(" << celda1.x << ", " << celda1.y << ")" << "(" << celda2.x << ", " << celda2.y << ")" << endl;
+    //cout<< "dif:"<< dif<< endl;
+    //cout<<"evalswap:"<<EvalSwapd<<endl;
+    cout<<"Evaluación actual:"<<EvaluacionActual<<endl;
     temp=temp*Rateofcooling;
+    //cout<<"Temp:"<<temp<<endl;
 }
 
 
@@ -371,21 +373,36 @@ int main() {
 
 
     //seteo de variables
-    int Semilla=110;
-    float Temp=1;
+    int Semilla=11;
+    float Temp=1.0;
     float Rateofcooling=0.99;
-    int maxIterations=100;
+    int maxIterations=1000000;
 
     //seteo de best sudoku
     Matrix Bestsudoku=Sudoku;
     int Besteval=Evalinicial;
-
     mt19937 gen(Semilla);
+    int contadorNomejora;
+    int BestEvalprevia;
     int i=0;
-    while ((i<maxIterations)&&(Evalinicial!=0)){
+    while ((i<maxIterations)&&(Besteval!=0)){
+        BestEvalprevia=Besteval;
         IteracionSA(Sudoku,Bestsudoku,Evalinicial,Besteval,Temp,Rateofcooling,gen,GrupoACeldas,GrupoASuma,CeldasSwap3x3);    
         i++;
+
+        if(Besteval==BestEvalprevia){
+            contadorNomejora++;
+        }else{
+            contadorNomejora=0;
+        }
+
+        if(contadorNomejora>500){
+            Temp=1.0;
+            cout<<"Máximo local detectado, recalentando sistema"<< endl;
+            contadorNomejora=0;
+        }
     }
-    
+
+    cout<<"Cantidad iteraciones:" <<i<<endl;
     printMatrix(Bestsudoku);
 }
