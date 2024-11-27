@@ -184,11 +184,11 @@ int EvaluarFila(Matrix Sudoku, int NumeroFila){
 //Se recorre cada grupo, sumando las celdas que pertenecen a ese grupo
 //luego se resta el valor SumaActual con el valor SumaReal
 //se saca el valor absoluto de esta diferencia y se divide por la cantidad de celdas del grupo.
-int EvaluarGrupos(Matrix Sudoku,numeroGrupoaCeldas GrupoaCeldas,numeroGrupoaSuma GrupoaSuma){
+float EvaluarGrupos(Matrix Sudoku,numeroGrupoaCeldas GrupoaCeldas,numeroGrupoaSuma GrupoaSuma){
     int CantidadGrupos = GrupoaSuma.size();
-    int TotalDiferencia = 0;
+    float TotalDiferencia = 0;
     for (int i=1; i<=CantidadGrupos; i++){
-        int DiferenciaGrupoActual=0;
+        float DiferenciaGrupoActual=0;
         int SumaActual=0;
         int SumaReal= GrupoaSuma[i];
         int CantidadCeldasEnGrupo=GrupoaCeldas[i].size();
@@ -197,7 +197,7 @@ int EvaluarGrupos(Matrix Sudoku,numeroGrupoaCeldas GrupoaCeldas,numeroGrupoaSuma
             int y= GrupoaCeldas[i][j].y;
             SumaActual += Sudoku[y][x].valor;
         }
-        DiferenciaGrupoActual=(abs(SumaActual-SumaReal))/CantidadCeldasEnGrupo; 
+        DiferenciaGrupoActual=(abs(SumaActual-SumaReal))/static_cast<float>(CantidadCeldasEnGrupo); 
     TotalDiferencia+=DiferenciaGrupoActual;
     }
     return TotalDiferencia;
@@ -208,7 +208,7 @@ int EvaluarGrupos(Matrix Sudoku,numeroGrupoaCeldas GrupoaCeldas,numeroGrupoaSuma
 //y se llama a la funcion EvaluarGrupos que calcula las diferencias para todos los grupos
 //Luego se suma todo y se consigue el valor Evaluación.
 //Un sudoku perfecto tiene valor evaluación 0, por lo que se debe minimizar este valor.
-int EvaluarSudoku(Matrix Sudoku, numeroGrupoaCeldas GrupoaCeldas , numeroGrupoaSuma GrupoaSuma){
+float EvaluarSudoku(Matrix Sudoku, numeroGrupoaCeldas GrupoaCeldas , numeroGrupoaSuma GrupoaSuma){
     int sum=0;
     for(int y=0; y<9; y++){
         sum += EvaluarFila(Sudoku,y);
@@ -344,7 +344,7 @@ void IteracionSA(Matrix& SudokuActual,Matrix& Sudokubest,int& EvaluacionActual,i
     //cout<< "swap:(" << celda1.x << ", " << celda1.y << ")" << "(" << celda2.x << ", " << celda2.y << ")" << endl;
     //cout<< "dif:"<< dif<< endl;
     //cout<<"evalswap:"<<EvalSwapd<<endl;
-    cout<<"Evaluación actual:"<<EvaluacionActual<<endl;
+    cout<<"Evaluación actual:"<<EvaluacionActual<<"\n";
     temp=temp*Rateofcooling;
     //cout<<"Temp:"<<temp<<endl;
 }
@@ -367,16 +367,16 @@ int main() {
     vector<vector<Coords>> CeldasSwap3x3=GreedyFill(Sudoku);
 
     //Evaluacion Solución inicial
-    int Evalinicial=EvaluarSudoku(Sudoku,GrupoACeldas,GrupoASuma);
+    float Evalinicial=EvaluarSudoku(Sudoku,GrupoACeldas,GrupoASuma);
     cout<< Evalinicial << endl;
     printMatrix(Sudoku);
 
 
     //seteo de variables
-    int Semilla=11;
+    int Semilla=110;
     float Temp=1.0;
     float Rateofcooling=0.99;
-    int maxIterations=1000000;
+    int maxIterations=10000000;
 
     //seteo de best sudoku
     Matrix Bestsudoku=Sudoku;
@@ -405,4 +405,5 @@ int main() {
 
     cout<<"Cantidad iteraciones:" <<i<<endl;
     printMatrix(Bestsudoku);
+    cout<< Besteval<< endl;
 }
