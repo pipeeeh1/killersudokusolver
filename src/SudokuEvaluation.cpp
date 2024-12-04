@@ -43,7 +43,7 @@ int EvaluarFila(Matrix Sudoku, int NumeroFila){
 //Se recorre cada grupo, sumando las celdas que pertenecen a ese grupo
 //luego se resta el valor SumaActual con el valor SumaReal
 //se saca el valor absoluto de esta diferencia y se divide por la cantidad de celdas del grupo.
-float EvaluarGrupos(Matrix Sudoku,numeroGrupoaCeldas GrupoaCeldas,numeroGrupoaSuma GrupoaSuma){
+int EvaluarGrupos(Matrix Sudoku,numeroGrupoaCeldas GrupoaCeldas,numeroGrupoaSuma GrupoaSuma){
     int CantidadGrupos = GrupoaSuma.size();
     float TotalDiferencia = 0;
     for (int i=1; i<=CantidadGrupos; i++){
@@ -59,7 +59,7 @@ float EvaluarGrupos(Matrix Sudoku,numeroGrupoaCeldas GrupoaCeldas,numeroGrupoaSu
         DiferenciaGrupoActual=(abs(SumaActual-SumaReal))/static_cast<float>(CantidadCeldasEnGrupo); 
     TotalDiferencia+=DiferenciaGrupoActual;
     }
-    return TotalDiferencia;
+    return (int)std::ceil(TotalDiferencia);
 }
 
 
@@ -67,7 +67,7 @@ float EvaluarGrupos(Matrix Sudoku,numeroGrupoaCeldas GrupoaCeldas,numeroGrupoaSu
 //y se llama a la funcion EvaluarGrupos que calcula las diferencias para todos los grupos
 //Luego se suma todo y se consigue el valor Evaluación.
 //Un sudoku perfecto tiene valor evaluación 0, por lo que se debe minimizar este valor.
-float EvaluarSudoku(Matrix Sudoku, numeroGrupoaCeldas GrupoaCeldas , numeroGrupoaSuma GrupoaSuma){
+int EvaluarSudoku(Matrix Sudoku, numeroGrupoaCeldas GrupoaCeldas , numeroGrupoaSuma GrupoaSuma){
     int sum=0;
     for(int y=0; y<9; y++){
         sum += EvaluarFila(Sudoku,y);
